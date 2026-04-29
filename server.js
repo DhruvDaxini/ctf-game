@@ -50,12 +50,27 @@ app.get('/hidden-admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'hidden-admin.html'));
 });
 
-// Hint endpoint
+// Hint endpoint — intentionally vague, points toward a forgotten dev route
 app.get('/api/hint', (req, res) => {
   res.json({
-    hint: "Not everything is on the surface. Try exploring the server — some paths aren't linked.",
-    tip: "Developers sometimes leave panels they forgot to hide. Check the source code of this page."
+    message: "Looks like something got left running in production.",
+    trace: "Check /api/internal/debug — devs never cleaned it up."
   });
+});
+
+// "Forgotten" debug route — this is where the real hint lives
+app.get('/api/internal/debug', (req, res) => {
+  res.type('text/plain').send(
+`[DEBUG] Internal config dump — DO NOT expose in production
+--------------------------------------------------------------
+env          : production
+node_version : ${process.version}
+uptime       : ${Math.floor(process.uptime())}s
+admin_panel  : /hidden-admin
+status       : active
+--------------------------------------------------------------
+-- THIS ROUTE SHOULD HAVE BEEN REMOVED BEFORE DEPLOY --`
+  );
 });
 
 // Flag submission with rate limiting

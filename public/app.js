@@ -45,8 +45,8 @@ async function getHint() {
     const res = await fetch('/api/hint');
     const data = await res.json();
     hintEl.innerHTML = `
-      💡 <strong>${data.hint}</strong><br/>
-      📌 ${data.tip}
+      <span style="color:#ffbd2e">${data.message}</span><br/>
+      <span style="color:#888">${data.trace}</span>
     `;
   } catch (err) {
     hintEl.textContent = '⚠️ Could not fetch hint.';

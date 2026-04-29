@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTF Challenge 🚩</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  
+  <div class="terminal-container">
+    <div class="terminal-header">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+      <span class="terminal-title">ctf-challenge — bash</span>
+    </div>
+    
+    <div class="terminal-body">
+      <div class="line">
+        <span class="prompt">root@challenge:~$</span>
+        <span class="cmd"> cat welcome.txt</span>
+      </div>
+      
+      <div class="output-block">
+        <pre>
+          ██████╗████████╗███████╗
+          ██╔════╝╚══██╔══╝██╔════╝
+          ██║        ██║   █████╗
+          ██║        ██║   ██╔══╝
+          ╚██████╗   ██║   ██║
+ ╚═════╝   ╚═╝   ╚═╝
+
+ CAPTURE THE FLAG — INTERNAL CHALLENGE
+ ──────────────────────────────────────
+ Welcome, hacker.
+ 
+ Somewhere on this server is a locked file.
+ Inside that file is a flag.
+ 
+ Your mission:
+ [1] Explore the server
+ [2] Find the hidden panel
+ [3] Download the encrypted file
+ [4] Crack it open
+ [5] Submit the flag below
+ 
+ Good luck. You'll need it.
+</pre>
+</div>
+
+<!-- <div class="line">
+  <span class="prompt">root@challenge:~$</span>
+  <span class="cmd"> curl /api/hint</span>
+</div> -->
+
+<div class="hint-block" id="hint-output">
+  <span class="muted">-- press [GET HINT] to reveal --</span>
+</div>
+
+<div class="line">
+  <span class="prompt">root@challenge:~$</span>
+  <span class="cmd"> ./submit_flag.sh</span>
+</div>
+
+<div class="submit-block">
+  <input
+  type="text"
+  id="flag-input"
+  placeholder="FLAG{...}"
+  autocomplete="off"
+  spellcheck="false"
+  />
+  <div class="btn-row">
+          <button onclick="submitFlag()">Submit Flag</button>
+          <button onclick="getHint()" style="display: none;" class="secondary">Get Hint</button>
+        </div>
+        <div id="result-msg" class="result-msg"></div>
+      </div>
+      
+      <div class="line blink-line">
+        <span class="prompt">root@challenge:~$</span>
+        <span class="cursor">█</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Hint: Try looking at /hidden-admin — not everything is visible on the surface. -->
+  <!-- Scoreboard -->
+  <div class="scoreboard-container">
+    <h2>🏆 Hall of Fame</h2>
+    <div id="scoreboard">
+      <p class="muted">No winners yet. Be the first!</p>
+    </div>
+    <div class="winner-form" id="winner-form" style="display:none;">
+      <input type="text" id="winner-name" placeholder="Enter your name for the Hall of Fame" />
+      <button onclick="registerWinner()">Claim Glory 🏅</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — CTF</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!--
+    SYSTEM: Restricted Access
+    If you're reading this, you found the hidden panel. Well done.
+    Download the files and figure out the rest yourself.
+  -->
+
+  <div class="terminal-container admin">
+    <div class="terminal-header">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+      <span class="terminal-title">ADMIN PANEL — RESTRICTED</span>
+    </div>
+
+    <div class="terminal-body">
+      <div class="line">
+        <span class="prompt admin-prompt">admin@challenge:~$</span>
+        <span class="cmd"> ls -la /secure/</span>
+      </div>
+
+      <div class="output-block">
+        <pre>
+drwxr-xr-x  2 root root 4096 Apr 29 2026 .
+drwxr-xr-x 18 root root 4096 Apr 29 2026 ..
+-rw-------  1 root root  169 Apr 29 2026 <a href="/files/flag.rar" class="file-link" download>flag.rar</a>
+-rw-r--r--  1 root root  65K  Apr 29 2026 <a href="/files/wordlist.txt" class="file-link" download>wordlist.txt</a>
+-rw-r--r--  1 root root  512  Apr 29 2026 <a href="/files/readme.txt" class="file-link" download>readme.txt</a>
+        </pre>
+      </div>
+
+      <div class="line">
+        <span class="prompt admin-prompt">admin@challenge:~$</span>
+        <span class="cmd"> cat instructions.txt</span>
+      </div>
+
+      <div class="output-block">
+        <pre>
+  You found the admin panel. Nice work.
+
+  Download the files below.
+  flag.rar is encrypted — the password is somewhere in wordlist.txt.
+  Figure out how to crack it. That's the challenge.
+
+  Once you have the flag, submit it at the main page: <a href="/" class="file-link">Go back →</a>
+        </pre>
+      </div>
+
+      <div class="line">
+        <span class="prompt admin-prompt">admin@challenge:~$</span>
+        <span class="cmd"> wget /files/flag.rar</span>
+      </div>
+
+      <div class="download-buttons">
+        <a href="/files/flag.rar" download class="btn-download">⬇ Download flag.rar</a>
+        <a href="/files/wordlist.txt" download class="btn-download secondary">⬇ Download wordlist.txt</a>
+        <a href="/files/readme.txt" download class="btn-download secondary">⬇ Download readme.txt</a>
+      </div>
+
+      <div class="line blink-line">
+        <span class="prompt admin-prompt">admin@challenge:~$</span>
+        <span class="cursor">█</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="/">← Back to Main Challenge</a>
+  </div>
+
+</body>
+</html>

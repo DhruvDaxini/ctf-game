@@ -1,56 +1,64 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const FLAG = process.env.FLAG || 'FLAG{bruteforce_master_2026}';
 
-// --- Simple in-memory rate limiter ---
-const rateLimitMap = new Map();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 20; // max flag submissions per minute per IP
+const FLAG = process.env.FLAG;
+if (!FLAG) {
+  console.error('FATAL: FLAG environment variable is not set. Add it to .env');
+  process.exit(1);
+}
+const FLAG_BUF = Buffer.from(FLAG);
 
-function rateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const record = rateLimitMap.get(ip) || { count: 0, start: now };
+const MAX_WINNERS = 100;
+const NAME_MAX_LEN = 32;
 
-  if (now - record.start > RATE_LIMIT_WINDOW) {
-    record.count = 1;
-    record.start = now;
-  } else {
-    record.count++;
+function flagsEqual(submitted) {
+  const subBuf = Buffer.from(submitted);
+  if (subBuf.length !== FLAG_BUF.length) {
+    crypto.timingSafeEqual(FLAG_BUF, FLAG_BUF);
+    return false;
   }
+  return crypto.timingSafeEqual(subBuf, FLAG_BUF);
+}
 
-  rateLimitMap.set(ip, record);
-
-  if (record.count > RATE_LIMIT_MAX) {
-    return res.status(429).json({ success: false, message: 'Too many attempts. Slow down, hacker! 🐢' });
-  }
-
-  next();
+function validateName(raw) {
+  if (typeof raw !== 'string') return null;
+  const name = raw.trim();
+  if (name.length === 0 || name.length > NAME_MAX_LEN) return null;
+  if (/[\x00-\x1f\x7f<>]/.test(name)) return null;
+  return name;
 }
 
 // --- Middleware ---
-app.use(cors());
-app.use(express.json());
+// Behind a single reverse proxy in production; harmless if none.
+app.set('trust proxy', 1);
 
-// Serve static frontend from public/
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: '1kb' }));
+
+const flagLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many attempts. Slow down, hacker! 🐢' },
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Serve challenge files (zip, wordlist, etc.)
 app.use('/files', express.static(path.join(__dirname, 'public', 'files')));
 
 // --- Routes ---
 
-// Hidden admin panel — players must discover this URL
 app.get('/hidden-admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'hidden-admin.html'));
 });
 
-// Hint endpoint — intentionally vague, points toward a forgotten dev route
 app.get('/api/hint', (req, res) => {
   res.json({
     message: "Looks like something got left running in production.",
@@ -58,7 +66,6 @@ app.get('/api/hint', (req, res) => {
   });
 });
 
-// "Forgotten" debug route — this is where the real hint lives
 app.get('/api/internal/debug', (req, res) => {
   res.type('text/plain').send(
 `[DEBUG] Internal config dump — DO NOT expose in production
@@ -73,15 +80,14 @@ status       : active
   );
 });
 
-// Flag submission with rate limiting
-app.post('/api/submit-flag', rateLimit, (req, res) => {
+app.post('/api/submit-flag', flagLimiter, (req, res) => {
   const { flag } = req.body;
 
   if (!flag || typeof flag !== 'string') {
     return res.status(400).json({ success: false, message: 'No flag provided.' });
   }
 
-  if (flag.trim() === FLAG) {
+  if (flagsEqual(flag.trim())) {
     console.log(`[${new Date().toISOString()}] CORRECT FLAG submitted from ${req.ip}`);
     return res.json({
       success: true,
@@ -94,26 +100,39 @@ app.post('/api/submit-flag', rateLimit, (req, res) => {
   res.json({ success: false, message: '❌ Wrong flag. Keep trying!' });
 });
 
-// Scoreboard (fun extra — stores winners in memory)
 const winners = [];
-app.post('/api/winner', rateLimit, (req, res) => {
-  const { name, flag } = req.body;
-  if (flag && flag.trim() === FLAG && name) {
-    if (!winners.find(w => w.name === name)) {
-      winners.push({ name, time: new Date().toISOString() });
-    }
-    return res.json({ success: true, winners });
+app.post('/api/winner', flagLimiter, (req, res) => {
+  const { name: rawName, flag } = req.body || {};
+
+  if (typeof flag !== 'string' || !flagsEqual(flag.trim())) {
+    return res.status(400).json({ success: false, message: 'Invalid.' });
   }
-  res.status(400).json({ success: false, message: 'Invalid.' });
+
+  const name = validateName(rawName);
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'Invalid name.' });
+  }
+
+  const exists = winners.some(w => w.name.toLowerCase() === name.toLowerCase());
+  if (!exists) {
+    if (winners.length >= MAX_WINNERS) {
+      winners.shift();
+    }
+    winners.push({ name, time: new Date().toISOString() });
+  }
+  res.json({ success: true, winners });
 });
 
 app.get('/api/scoreboard', (req, res) => {
   res.json({ winners });
 });
 
-// Catch-all: serve index.html for unknown routes
+// Catch-all: HTML clients get the landing page, everyone else gets a real 404.
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
+  if (req.accepts('html')) {
+    return res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+  res.status(404).json({ error: 'Not found' });
 });
 
 app.listen(PORT, () => {

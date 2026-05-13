@@ -1,7 +1,5 @@
 // ===== CTF Game — Client Logic =====
 
-let correctFlagSubmitted = false;
-
 async function submitFlag() {
   const input = document.getElementById('flag-input');
   const resultEl = document.getElementById('result-msg');
@@ -26,7 +24,6 @@ async function submitFlag() {
 
     if (data.success) {
       showResult(`${data.message}  🚩 ${data.flag}`, true);
-      correctFlagSubmitted = true;
       triggerWin();
       loadScoreboard();
     } else {
